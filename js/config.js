@@ -4,9 +4,9 @@ const CONFIG = {
   API_URL: "https://YOUR-PROJECT-REF.supabase.co/functions/v1/api",
 
   // LIFF ID ของแต่ละหน้า (LINE Developers > LINE Login channel > LIFF)
-  LIFF_STUDENT: "2000000000-xxxxxxxx",
-  LIFF_TEACHER: "2000000000-yyyyyyyy",
-  LIFF_ADMIN:   "2000000000-zzzzzzzz",
+  LIFF_STUDENT: "2011981207-6ebJpe6l",
+  LIFF_TEACHER: "2011981207-Aw0MO4RJ",
+  LIFF_ADMIN:   "2011981207-gBucylQm",
   LIFF_FORMS:   "2000000000-ffffffff",   // แบบฟอร์มนักเรียน (ปพ.8 / SDQ / EQ) → forms.html
   LIFF_CARE:    "2000000000-cccccccc",   // ระบบดูแลช่วยเหลือนักเรียน (ครู) → care.html
 

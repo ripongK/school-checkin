@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>ผู้ดูแลระบบ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>ผู้ดูแลระบบ <small data-school></small></header>
+<main>
+  <!-- ผูกบัญชี LINE กับรหัสผู้ดูแล -->
+  <section id="secRegister" class="card hidden">
+    <h2>ยืนยันตัวผู้ดูแลระบบ</h2>
+    <label for="aId">รหัสเจ้าหน้าที่ 5 หลัก</label>
+    <input id="aId" inputmode="numeric" maxlength="5">
+    <button id="btnAReg">ยืนยัน</button>
+  </section>
+
+  <div id="app" class="hidden">
+    <div class="card"><h2>ภาพรวม</h2><p id="stats" class="muted"></p></div>
+
+    <!-- 1.1 ตั้งค่าภาคเรียน -->
+    <section class="card">
+      <h2>ตั้งค่าภาคเรียน</h2>
+      <div class="row">
+        <div><label for="sYear">ปีการศึกษา</label><input id="sYear" type="number"></div>
+        <div><label for="sSem">ภาคเรียนที่</label><select id="sSem"><option>1</option><option>2</option><option>3</option></select></div>
+      </div>
+      <div class="row">
+        <div><label for="sStart">วันเปิดเรียน</label><input id="sStart" type="date"></div>
+        <div><label for="sEnd">วันสิ้นสุด</label><input id="sEnd" type="date"></div>
+      </div>
+      <div class="row">
+        <div><label for="sLate">เริ่มนับสายหลังเวลา</label><input id="sLate" type="time"></div>
+        <div><label for="sEndTime">เวลาเลิกเรียน</label><input id="sEndTime" type="time"></div>
+      </div>
+      <div class="row">
+        <div><label for="sLat">ละติจูดโรงเรียน</label><input id="sLat" type="number" step="any"></div>
+        <div><label for="sLng">ลองจิจูดโรงเรียน</label><input id="sLng" type="number" step="any"></div>
+      </div>
+      <label class="check-item" style="color:var(--text)"><input type="checkbox" id="sSat"> มีเรียน/กิจกรรมทุกวันเสาร์ (นับเป็นวันเรียน)</label>
+      <p class="muted">ถ้าเสาร์-อาทิตย์บางวันเท่านั้น ให้เพิ่มวันที่ในตาราง extra_days ของ Supabase แทน</p>
+      <label for="sRadius">รัศมีที่อนุญาต (เมตร)</label>
+      <input id="sRadius" type="number" value="100">
+      <button id="btnHere" class="secondary">ใช้ตำแหน่งที่ฉันยืนอยู่ตอนนี้เป็นพิกัดโรงเรียน</button>
+      <button id="btnSave">บันทึกการตั้งค่า</button>
+    </section>
+
+    <!-- เปิด/ปิดแบบฟอร์มนักเรียน -->
+    <section class="card">
+      <h2>เปิด/ปิดแบบฟอร์มนักเรียน</h2>
+      <p class="muted">เปิดเมื่อถึงช่วงที่ต้องการให้นักเรียนกรอก แล้วเพิ่มปุ่มในริชเมนูของ LINE OA ชี้ไปที่ลิงก์ของแต่ละแบบฟอร์ม</p>
+      <div id="winList" class="muted">กำลังโหลด...</div>
+    </section>
+
+    <!-- 1.2 นำเข้ารายชื่อ -->
+    <section class="card">
+      <h2>นำเข้ารายชื่อนักเรียน</h2>
+      <p class="muted">ไฟล์ CSV จาก Google Sheet (ไฟล์ > ดาวน์โหลด > CSV) หัวคอลัมน์:<br>
+        <code>student_id,prefix,first_name,last_name,gender,classroom,number</code></p>
+      <input id="fStudents" type="file" accept=".csv,text/csv">
+      <button id="btnImpStu">นำเข้านักเรียน</button>
+    </section>
+
+    <section class="card">
+      <h2>นำเข้ารายชื่อครูที่ปรึกษา</h2>
+      <p class="muted">หัวคอลัมน์: <code>teacher_id,full_name,classroom</code></p>
+      <input id="fTeachers" type="file" accept=".csv,text/csv">
+      <button id="btnImpT">นำเข้าครูที่ปรึกษา</button>
+    </section>
+
+    <section class="card">
+      <h2>ล้างการลงทะเบียนนักเรียน</h2>
+      <p class="muted">ใช้เมื่อนักเรียนเปลี่ยนมือถือ/บัญชี LINE หรือสแกนใบหน้าไม่ผ่านบ่อย นักเรียนจะต้องลงทะเบียนใหม่</p>
+      <input id="rId" inputmode="numeric" maxlength="5" placeholder="รหัสนักเรียน 5 หลัก">
+      <button id="btnReset" class="danger">ล้างการลงทะเบียน</button>
+    </section>
+  </div>
+</main>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+
+(async () => {
+  try { await App.init(CONFIG.LIFF_ADMIN); await load(); } catch (e) { App.alert(e.message); }
+})();
+
+async function load() {
+  try {
+    App.loading("กำลังโหลด...");
+    const r = await App.api("admin.getSettings");
+    App.close();
+    $("secRegister").classList.add("hidden");
+    $("app").classList.remove("hidden");
+    const s = r.settings;
+    $("stats").textContent = `นักเรียน ${r.stats.students} คน | ลงทะเบียนใบหน้าแล้ว ${r.stats.registered} คน | ครูที่ปรึกษา ${r.stats.teachers} คน`;
+    $("sYear").value = s.academic_year; $("sSem").value = s.semester;
+    $("sStart").value = s.start_date; $("sEnd").value = s.end_date;
+    $("sLate").value = s.late_time.slice(0, 5); $("sEndTime").value = s.end_time.slice(0, 5);
+    $("sLat").value = s.school_lat; $("sLng").value = s.school_lng; $("sRadius").value = s.radius_m;
+    $("sSat").checked = !!s.saturday_school;
+    loadWindows().catch((e) => ($("winList").textContent = e.message));
+  } catch (e) {
+    App.close();
+    // ยังไม่ได้ผูก LINE กับรหัสผู้ดูแล
+    $("secRegister").classList.remove("hidden");
+    if (!e.message.includes("เฉพาะผู้ดูแลระบบ")) App.alert(e.message);
+  }
+}
+
+// ---------- เปิด/ปิดแบบฟอร์ม ----------
+async function loadWindows() {
+  const r = await App.api("admin.formWindows");
+  $("winList").innerHTML = r.windows.map((w) => `
+    <div class="card" style="border:1px solid var(--line);box-shadow:none">
+      <b>${App.esc(w.title)}</b><br>
+      <span class="muted">ส่งแล้วรอบนี้ ${r.counts[w.form] ?? 0} คน · ลิงก์ริชเมนู:
+        <code>https://liff.line.me/${CONFIG.LIFF_FORMS}?f=${w.form}</code></span>
+      <label class="check-item" style="color:var(--text)"><input type="checkbox" data-win="${w.form}" ${w.is_open ? "checked" : ""}> เปิดให้นักเรียนกรอก</label>
+      <input data-note="${w.form}" maxlength="200" placeholder="ข้อความแจ้งนักเรียน เช่น กรอกภายใน 30 มิ.ย." value="${App.esc(w.note ?? "")}">
+      <button class="secondary" data-save="${w.form}">บันทึก</button>
+    </div>`).join("");
+  $("winList").querySelectorAll("[data-save]").forEach((b) => (b.onclick = async () => {
+    const f = b.dataset.save;
+    try {
+      App.loading();
+      const r2 = await App.api("admin.setFormWindow", {
+        form: f, isOpen: document.querySelector(`[data-win="${f}"]`).checked,
+        note: document.querySelector(`[data-note="${f}"]`).value,
+      });
+      App.alert(r2.message, "สำเร็จ");
+    } catch (e) { App.alert(e.message); }
+  }));
+}
+
+$("btnAReg").onclick = async () => {
+  try {
+    App.loading();
+    const r = await App.api("teacher.register", { teacherId: $("aId").value.trim() });
+    await App.alert(r.message);
+    load();
+  } catch (e) { App.alert(e.message); }
+};
+
+$("btnHere").onclick = async () => {
+  try {
+    App.loading("กำลังอ่านพิกัด...");
+    const p = await App.getLocation();
+    $("sLat").value = p.lat.toFixed(6); $("sLng").value = p.lng.toFixed(6);
+    App.alert(`ได้พิกัดแล้ว (ความแม่นยำ ±${p.accuracy} เมตร) อย่าลืมกดบันทึก`);
+  } catch (e) { App.alert(e.message); }
+};
+
+$("btnSave").onclick = async () => {
+  try {
+    App.loading("กำลังบันทึก...");
+    const r = await App.api("admin.saveSettings", { settings: {
+      academic_year: Number($("sYear").value), semester: Number($("sSem").value),
+      start_date: $("sStart").value, end_date: $("sEnd").value,
+      late_time: $("sLate").value, end_time: $("sEndTime").value,
+      school_lat: Number($("sLat").value), school_lng: Number($("sLng").value), radius_m: Number($("sRadius").value),
+      saturday_school: $("sSat").checked,
+    } });
+    App.alert(r.message, "สำเร็จ");
+  } catch (e) { App.alert(e.message); }
+};
+
+function readCsv(input) {
+  return new Promise((resolve, reject) => {
+    const f = input.files[0];
+    if (!f) return reject(new Error("กรุณาเลือกไฟล์ CSV"));
+    Papa.parse(f, { header: true, skipEmptyLines: true, complete: (r) => resolve(r.data), error: reject });
+  });
+}
+async function importRows(input, action) {
+  try {
+    const rows = await readCsv(input);
+    if (!(await App.confirm(`พบข้อมูล ${rows.length} แถว ต้องการนำเข้าหรือไม่?`))) return;
+    App.loading("กำลังนำเข้า...");
+    const r = await App.api(action, { rows });
+    await App.alert(r.message, "สำเร็จ");
+    load();
+  } catch (e) { App.alert(e.message); }
+}
+$("btnImpStu").onclick = () => importRows($("fStudents"), "admin.importStudents");
+$("btnImpT").onclick = () => importRows($("fTeachers"), "admin.importTeachers");
+
+$("btnReset").onclick = async () => {
+  const id = $("rId").value.trim();
+  if (!(await App.confirm(`ยืนยันล้างการลงทะเบียนของรหัส ${id}?`))) return;
+  try { App.loading(); const r = await App.api("admin.resetStudent", { studentId: id }); App.alert(r.message, "สำเร็จ"); }
+  catch (e) { App.alert(e.message); }
+};
+</script>
+</body>
+</html>
